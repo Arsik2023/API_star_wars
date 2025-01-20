@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
@@ -13,41 +14,43 @@ class Program
             HttpResponseMessage response = await client.GetAsync(apiUrl);
             string responseBody = await response.Content.ReadAsStringAsync();
 
-            // Преобразуйте строку JSON в объект JObject
+            // Convert JSON string to JObject
             JObject jsonObject = JObject.Parse(responseBody);
 
-            // Получите массив результатов
+            // Get the array of results
             JArray results = (JArray)jsonObject["results"];
 
             Console.Write("Choose a Star Wars character: ");
-            string hero = Console.ReadLine();
+            string heroInput = Console.ReadLine();
 
-            List<string> heros = new List<string> {};
+            List<string> heroes = new List<string>();
 
             foreach (JObject character in results)
             {
-                heros.Add((string)character["name"]);
+                heroes.Add((string)character["name"]);
             }
-            for (int i = 0; i < heros.Count; i++)
-            {
-                if (hero == heros[i])
-                {
-                    Console.WriteLine($"Name: " + heros[i]);
-                    Console.WriteLine($"Height: " + (results[i]["height"]));
-                    Console.WriteLine($"Mass: " + (results[i]["mass"]));
-                    Console.WriteLine($"Hair color: " + (results[i]["hair_color"]));
-                    Console.WriteLine($"Eye color: " + (results[i]["eye_color"]));
-                    Console.WriteLine($"Gender: " + (results[i]["gender"]));
-                    Console.WriteLine($"Date of birth: " + (results[i]["birth_year"]));
-                    Console.WriteLine("Movies that had " + heros[i] + " in them:");
-                    foreach (string film in (results[i]["films"]))
-                    {
-                        HttpResponseMessage response_film = await client.GetAsync(film);
-                        string responseBodyFilm = await response_film.Content.ReadAsStringAsync();
 
-                        // Преобразуйте строку JSON в объект JObject
-                        JObject jsonObjectFilm = JObject.Parse(responseBodyFilm);
-                        Console.WriteLine("Star Wars. Episode " + (string)(jsonObjectFilm["episode_id"]) + ": " + (string)(jsonObjectFilm["title"]));
+            for (int i = 0; i < heroes.Count; i++)
+            {
+                if (heroInput.Equals(heroes[i], StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"Name: {heroes[i]}");
+                    Console.WriteLine($"Height: {results[i]["height"]}");
+                    Console.WriteLine($"Mass: {results[i]["mass"]}");
+                    Console.WriteLine($"Hair Color: {results[i]["hair_color"]}");
+                    Console.WriteLine($"Eye Color: {results[i]["eye_color"]}");
+                    Console.WriteLine($"Gender: {results[i]["gender"]}");
+                    Console.WriteLine($"Date of Birth: {results[i]["birth_year"]}");
+                    Console.WriteLine($"Movies that had {heroes[i]} in them:");
+
+                    foreach (string filmUrl in (results[i]["films"]))
+                    {
+                        HttpResponseMessage filmResponse = await client.GetAsync(filmUrl);
+                        string filmResponseBody = await filmResponse.Content.ReadAsStringAsync();
+
+                        // Convert JSON string to JObject
+                        JObject filmJsonObject = JObject.Parse(filmResponseBody);
+                        Console.WriteLine($"Star Wars. Episode {filmJsonObject["episode_id"]}: {filmJsonObject["title"]}");
                     }
                 }
             }
